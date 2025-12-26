@@ -17,10 +17,69 @@ export default function ContentPackReview({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [exporting, setExporting] = useState<string | null>(null);
 
   const canSubmit = contentPack.status === 'draft';
   const canApprove = contentPack.status === 'pending_approval';
   const canReject = contentPack.status === 'pending_approval';
+
+  async function handleExport(format: string) {
+    try {
+      setExporting(format);
+      setError(null);
+      setSuccess(null);
+
+      const response = await fetch('/api/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          format,
+          contentPackId: contentPack.id,
+          businessProfileId: contentPack.business_profile_id,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to export content pack');
+      }
+
+      const result = await response.json();
+
+      if (format === 'markdown' || format === 'json') {
+        // Download as file
+        const blob = new Blob([result.content], {
+          type: format === 'json' ? 'application/json' : 'text/markdown',
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setSuccess(`Exported as ${result.filename}`);
+      } else if (format === 'pdf') {
+        // Download PDF
+        const a = document.createElement('a');
+        a.href = result.fileUrl;
+        a.download = result.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setSuccess(`Exported as ${result.filename}`);
+      } else {
+        // Google Docs - open in new tab
+        window.open(result.documentUrl, '_blank');
+        setSuccess('Opened in Google Docs');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Export failed');
+    } finally {
+      setExporting(null);
+    }
+  }
 
   async function handleApprovalAction(actionType: 'submit' | 'approve' | 'reject') {
     try {
@@ -186,6 +245,31 @@ export default function ContentPackReview({
       )}
 
       <div style={{ borderTop: '1px solid #e0e0e0', paddingTop: '1.5rem' }}>
+        {contentPack.status === 'approved' && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>
+              Export
+            </h3>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              {['google-docs', 'pdf', 'markdown', 'json'].map((format) => (
+                <button
+                  key={format}
+                  onClick={() => handleExport(format)}
+                  disabled={exporting === format}
+                  style={{
+                    backgroundColor: exporting === format ? '#9e9e9e' : '#1976d2',
+                    color: '#fff',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {exporting === format ? 'Exporting...' : `Export as ${format.toUpperCase()}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {action ? (
           <div>
             <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>

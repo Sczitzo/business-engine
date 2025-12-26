@@ -84,3 +84,92 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// PATCH /api/budget
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await getSupabaseUserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { businessProfileId, monthlyCap } = body;
+
+    if (!businessProfileId || monthlyCap === undefined) {
+      return NextResponse.json(
+        { error: 'Missing required fields: businessProfileId, monthlyCap' },
+        { status: 400 }
+      );
+    }
+
+    if (monthlyCap < 0) {
+      return NextResponse.json(
+        { error: 'Monthly cap must be greater than or equal to 0' },
+        { status: 400 }
+      );
+    }
+
+    // Get current month
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const monthKey = monthStart.toISOString().split('T')[0].substring(0, 7) + '-01';
+
+    // Get or create budget ledger
+    let ledger = await getCurrentMonthBudget(supabase, businessProfileId);
+
+    if (ledger) {
+      // Update existing ledger
+      const { data, error } = await supabase
+        .from('budget_ledger')
+        .update({ monthly_cap: monthlyCap })
+        .eq('id', ledger.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update budget ledger: ${error.message}`);
+      }
+
+      return NextResponse.json(data);
+    } else {
+      // Create new ledger
+      // Get organization_id from business profile
+      const { data: profile, error: profileError } = await supabase
+        .from('business_profiles')
+        .select('organization_id')
+        .eq('id', businessProfileId)
+        .single();
+
+      if (profileError) {
+        throw new Error(`Failed to get business profile: ${profileError.message}`);
+      }
+
+      const { data, error } = await supabase
+        .from('budget_ledger')
+        .insert({
+          business_profile_id: businessProfileId,
+          organization_id: profile.organization_id,
+          month: monthKey,
+          monthly_cap: monthlyCap,
+          actual_spend: 0,
+          currency: 'USD',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to create budget ledger: ${error.message}`);
+      }
+
+      return NextResponse.json(data);
+    }
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
