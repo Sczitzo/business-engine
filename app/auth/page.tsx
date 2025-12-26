@@ -128,9 +128,13 @@ export default function AuthPage() {
 
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               setIsSignUp(!isSignUp);
               setError(null);
+              setEmail('');
+              setPassword('');
             }}
             className="auth-button-secondary"
             disabled={loading}
