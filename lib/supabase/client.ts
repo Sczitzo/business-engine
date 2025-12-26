@@ -5,12 +5,9 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // Access environment variables at module level (top-level)
 // This ensures Next.js can statically analyze and embed them in the client bundle
 // IMPORTANT: These must be accessed directly, not through functions, for Next.js to embed them
-const supabaseUrlRaw = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKeyRaw = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-// Trim whitespace and ensure no trailing slash (Supabase doesn't like trailing slashes)
-const supabaseUrl = supabaseUrlRaw?.trim().replace(/\/+$/, '') || '';
-const supabaseAnonKey = supabaseAnonKeyRaw?.trim() || '';
+// Next.js will replace process.env.NEXT_PUBLIC_* with actual values at build time
+const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim().replace(/\/+$/, '');
+const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
 
 // Validate that we have valid, non-empty strings
 const isValidUrl = supabaseUrl.length > 0 && supabaseUrl.startsWith('http');
