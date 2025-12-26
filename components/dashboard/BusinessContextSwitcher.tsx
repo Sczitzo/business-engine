@@ -21,11 +21,37 @@ export default function BusinessContextSwitcher({
   }, []);
 
   async function loadBusinessProfiles() {
-    // Authentication temporarily disabled for testing
-    // Just show empty state
-    setLoading(true);
-    setBusinessProfiles([]);
-    setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+
+      // First, try to seed demo data if nothing exists
+      const seedResponse = await fetch('/api/seed', { method: 'POST' });
+      if (seedResponse.ok) {
+        console.log('✅ Demo data seeded');
+      }
+
+      // Then load business profiles using service role (bypassing auth)
+      // We'll use a direct API call that doesn't require auth
+      const response = await fetch('/api/business-profiles');
+      
+      if (response.ok) {
+        const data = await response.json();
+        setBusinessProfiles(data || []);
+        
+        // Auto-select first profile if none selected
+        if (!selectedProfile && data && data.length > 0) {
+          onProfileChange(data[0]);
+        }
+      } else {
+        setBusinessProfiles([]);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load business profiles');
+      setBusinessProfiles([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   if (loading) {

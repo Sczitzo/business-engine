@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '../middleware';
+import { getSupabaseServiceClient } from '@/lib/supabase/server';
 import {
   createContentPack,
   getContentPack,
@@ -16,7 +17,8 @@ import { validateUUID, validateRequired, validateEnum, validateLength } from '@/
 // GET /api/content-packs?businessProfileId=xxx&status=xxx
 export async function GET(request: NextRequest) {
   try {
-    const { supabase } = await requireAuth(request);
+    // Use service role client to bypass auth (for demo mode)
+    const supabase = getSupabaseServiceClient();
 
     const searchParams = request.nextUrl.searchParams;
     const businessProfileId = searchParams.get('businessProfileId');
