@@ -8,8 +8,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrlRaw = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKeyRaw = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Trim whitespace and validate
-const supabaseUrl = supabaseUrlRaw?.trim() || '';
+// Trim whitespace and ensure no trailing slash (Supabase doesn't like trailing slashes)
+const supabaseUrl = supabaseUrlRaw?.trim().replace(/\/+$/, '') || '';
 const supabaseAnonKey = supabaseAnonKeyRaw?.trim() || '';
 
 // Validate that we have valid, non-empty strings
@@ -59,7 +59,8 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export const supabase: SupabaseClient = createClient(
+// Create the client
+const client = createClient(
   supabaseUrl,
   supabaseAnonKey,
   {
@@ -74,5 +75,18 @@ export const supabase: SupabaseClient = createClient(
     },
   }
 );
+
+// Verify the client was created correctly by checking its internal URL
+if (typeof window !== 'undefined') {
+  // @ts-ignore - accessing internal property for debugging
+  const clientUrl = client.supabaseUrl;
+  console.log('✅ Supabase client created. Internal URL:', clientUrl ? `${clientUrl.substring(0, 40)}...` : 'MISSING');
+  
+  if (!clientUrl || clientUrl.trim() === '') {
+    console.error('❌ Supabase client has empty URL! This will cause fetch errors.');
+  }
+}
+
+export const supabase: SupabaseClient = client;
 
 
