@@ -84,7 +84,7 @@ CREATE TABLE content_packs (
 -- Approval workflows (state machine: draft → pending → approved)
 CREATE TABLE approval_workflows (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    content_pack_id UUID NOT NULL REFERENCES content_packs(id) ON DELETE CASCADE,
+    content_pack_id UUID NOT NULL UNIQUE REFERENCES content_packs(id) ON DELETE CASCADE,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     current_state TEXT NOT NULL DEFAULT 'draft' CHECK (current_state IN ('draft', 'pending_approval', 'approved', 'rejected')),
     previous_state TEXT,
