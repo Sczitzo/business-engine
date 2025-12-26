@@ -228,12 +228,11 @@ async function checkAndAdvanceWorkflow(
     return;
   }
 
-  // Get current step approvals
-  const { data: stepApprovals, error: approvalsError } = await supabase
+  // Get ALL step approvals (pending, approved, rejected) to properly track workflow state
+  const { data: allStepApprovals, error: approvalsError } = await supabase
     .from('workflow_step_approvals')
     .select('*')
-    .eq('approval_workflow_id', approvalWorkflowId)
-    .eq('status', 'approved');
+    .eq('approval_workflow_id', approvalWorkflowId);
 
   if (approvalsError) {
     return;
@@ -245,14 +244,16 @@ async function checkAndAdvanceWorkflow(
 
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
-    const stepApprovalsForStep = stepApprovals.filter(
-      (sa: WorkflowStepApproval) => sa.step_index === step.stepIndex
+    // Filter for approved approvals for this step to check completion
+    const approvedApprovalsForStep = (allStepApprovals || []).filter(
+      (sa: WorkflowStepApproval) =>
+        sa.step_index === step.stepIndex && sa.status === 'approved'
     );
 
     const requiredApprovals = step.requireAll
       ? step.approverIds.length
       : 1;
-    const approvedCount = stepApprovalsForStep.length;
+    const approvedCount = approvedApprovalsForStep.length;
 
     if (approvedCount < requiredApprovals) {
       currentStepIndex = i;
@@ -275,7 +276,8 @@ async function checkAndAdvanceWorkflow(
 
   // If we've moved to a new step, create approvals for it
   const currentStep = steps[currentStepIndex];
-  const existingApprovals = stepApprovals.filter(
+  // Check for ANY existing approvals (pending, approved, rejected) to avoid duplicates
+  const existingApprovals = (allStepApprovals || []).filter(
     (sa: WorkflowStepApproval) => sa.step_index === currentStep.stepIndex
   );
 
