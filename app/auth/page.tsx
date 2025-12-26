@@ -18,13 +18,26 @@ export default function AuthPage() {
     setError(null);
 
     try {
+      // Check if Supabase client is properly initialized
+      if (!supabase) {
+        throw new Error('Supabase client is not initialized. Please check your environment variables.');
+      }
+
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
         if (error) throw error;
-        alert('Check your email for the confirmation link');
+        
+        // Check if email confirmation is required
+        if (data.user && !data.session) {
+          alert('Check your email for the confirmation link');
+        } else {
+          // Auto-sign in if email confirmation is disabled
+          router.push('/');
+          router.refresh();
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -35,7 +48,24 @@ export default function AuthPage() {
         router.refresh();
       }
     } catch (err: any) {
-      setError(err.message || 'Authentication failed');
+      // Provide user-friendly error messages
+      let errorMessage = 'Authentication failed';
+      
+      if (err.message) {
+        if (err.message.includes('Invalid value') || err.message.includes('fetch')) {
+          errorMessage = 'Configuration error: Please check that Supabase environment variables are set correctly.';
+        } else if (err.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please try again.';
+        } else if (err.message.includes('User already registered')) {
+          errorMessage = 'An account with this email already exists. Please sign in instead.';
+        } else if (err.message.includes('Password')) {
+          errorMessage = err.message;
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
