@@ -6,6 +6,7 @@ import ContentPackList from './ContentPackList';
 import ContentPackReview from './ContentPackReview';
 import ContentPackGenerator from './ContentPackGenerator';
 import BudgetManager from './BudgetManager';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import type { BusinessProfile, ContentPack } from '@/lib/core/types';
 
 export default function Dashboard() {
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showGenerator, setShowGenerator] = useState(false);
   const [showBudget, setShowBudget] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   const handleContentPackSelect = (contentPack: ContentPack) => {
     setSelectedContentPack(contentPack);
@@ -43,8 +45,23 @@ export default function Dashboard() {
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={() => {
+                setShowAnalytics(!showAnalytics);
+                setShowBudget(false);
+                setShowGenerator(false);
+              }}
+              style={{
+                backgroundColor: showAnalytics ? '#1976d2' : '#f5f5f5',
+                color: showAnalytics ? '#fff' : '#333',
+                padding: '0.5rem 1rem',
+              }}
+            >
+              Analytics
+            </button>
+            <button
+              onClick={() => {
                 setShowBudget(!showBudget);
                 setShowGenerator(false);
+                setShowAnalytics(false);
               }}
               style={{
                 backgroundColor: showBudget ? '#1976d2' : '#f5f5f5',
@@ -58,6 +75,7 @@ export default function Dashboard() {
               onClick={() => {
                 setShowGenerator(!showGenerator);
                 setShowBudget(false);
+                setShowAnalytics(false);
               }}
               style={{
                 backgroundColor: showGenerator ? '#1976d2' : '#4caf50',
@@ -117,7 +135,9 @@ export default function Dashboard() {
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', backgroundColor: '#fff' }}>
-            {showGenerator && selectedBusinessProfile ? (
+            {showAnalytics && selectedBusinessProfile ? (
+              <AnalyticsDashboard businessProfileId={selectedBusinessProfile.id} />
+            ) : showGenerator && selectedBusinessProfile ? (
               <ContentPackGenerator
                 businessProfileId={selectedBusinessProfile.id}
                 onSuccess={() => {
