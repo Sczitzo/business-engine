@@ -41,16 +41,17 @@ export async function GET(request: NextRequest) {
 
     validateUUID(businessProfileId, 'businessProfileId');
 
-    // Validate status if provided
+    // Validate status if provided and use validated value
+    let validatedStatus: string | undefined = status;
     if (status) {
-      validateEnum(status, ['draft', 'pending_approval', 'approved', 'rejected'], 'status');
+      validatedStatus = validateEnum(status, ['draft', 'pending_approval', 'approved', 'rejected'], 'status');
     }
 
     // Get all content packs for business profile
     const contentPacks = await getContentPacksForBusinessProfile(
       supabase,
       businessProfileId,
-      status
+      validatedStatus
     );
 
     return NextResponse.json(contentPacks);

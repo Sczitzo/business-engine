@@ -56,10 +56,11 @@ export async function checkBudgetAvailability(
   const monthlyCap = Number(ledger.monthly_cap) || 0;
   
   // Treat monthlyCap of 0 as unconfigured (same as missing ledger)
+  // But still return actual currentSpend for accurate reporting
   if (monthlyCap === 0) {
     return {
       allowed: true,
-      currentSpend: 0,
+      currentSpend: currentSpend, // Return actual spend, not 0
       monthlyCap: 0,
       remaining: Infinity,
     };

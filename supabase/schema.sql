@@ -438,8 +438,8 @@ BEGIN
                 ELSE approved_at 
             END,
             approved_by = CASE 
-                WHEN NEW.current_state = 'approved' AND OLD.current_state != 'approved' 
-                THEN NEW.reviewed_by 
+                WHEN NEW.current_state = 'approved' AND OLD.current_state != 'approved' AND NEW.reviewed_by IS NOT NULL
+                THEN NEW.reviewed_by -- Only set approved_by if reviewed_by is actually set
                 ELSE approved_by 
             END
         WHERE id = NEW.content_pack_id;

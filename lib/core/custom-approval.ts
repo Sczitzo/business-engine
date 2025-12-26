@@ -263,10 +263,19 @@ async function checkAndAdvanceWorkflow(
 
   // If all steps are complete, approve the workflow
   if (currentStepIndex === -1) {
+    // Get the last approver from the final step approvals
+    const finalStepApprovals = (allStepApprovals || []).filter(
+      (sa: WorkflowStepApproval) => sa.status === 'approved'
+    );
+    const lastApprover = finalStepApprovals.length > 0 
+      ? finalStepApprovals[finalStepApprovals.length - 1].approver_id 
+      : null;
+
     const { error: approveError } = await supabase
       .from('approval_workflows')
       .update({
         current_state: 'approved',
+        reviewed_by: lastApprover, // Set reviewed_by to last approver for audit trail
         reviewed_at: new Date().toISOString(),
       })
       .eq('id', approvalWorkflowId);

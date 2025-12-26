@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check budget availability for an operation
-    if (checkCost !== null) {
+    if (checkCost !== null && checkCost !== '') {
       const cost = parseFloat(checkCost);
       if (isNaN(cost) || cost < 0) {
         return NextResponse.json(
