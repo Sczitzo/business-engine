@@ -4,7 +4,8 @@ import { createClient } from '@supabase/supabase-js';
 import { getEnv } from '@/lib/utils/env';
 
 const supabaseUrl = getEnv('NEXT_PUBLIC_SUPABASE_URL');
-const supabaseServiceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY');
+// Trim any whitespace/newlines from service key (common issue with env vars)
+const supabaseServiceKey = getEnv('SUPABASE_SERVICE_ROLE_KEY').trim().replace(/\n/g, '');
 
 /**
  * Get Supabase client with service role (elevated privileges)

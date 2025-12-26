@@ -26,27 +26,38 @@ export default function BusinessContextSwitcher({
       setError(null);
 
       // First, try to seed demo data if nothing exists
+      console.log('🌱 Seeding demo data...');
       const seedResponse = await fetch('/api/seed', { method: 'POST' });
       if (seedResponse.ok) {
-        console.log('✅ Demo data seeded');
+        const seedData = await seedResponse.json();
+        console.log('✅ Demo data seeded:', seedData);
+      } else {
+        const seedError = await seedResponse.json();
+        console.warn('⚠️ Seed warning:', seedError);
       }
 
       // Then load business profiles using service role (bypassing auth)
-      // We'll use a direct API call that doesn't require auth
+      console.log('📦 Loading business profiles...');
       const response = await fetch('/api/business-profiles');
       
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Loaded business profiles:', data);
         setBusinessProfiles(data || []);
         
         // Auto-select first profile if none selected
         if (!selectedProfile && data && data.length > 0) {
+          console.log('🎯 Auto-selecting first profile:', data[0]);
           onProfileChange(data[0]);
         }
       } else {
+        const errorData = await response.json();
+        console.error('❌ Failed to load profiles:', errorData);
+        setError(errorData.error || 'Failed to load business profiles');
         setBusinessProfiles([]);
       }
     } catch (err: any) {
+      console.error('❌ Error loading business profiles:', err);
       setError(err.message || 'Failed to load business profiles');
       setBusinessProfiles([]);
     } finally {
