@@ -6,8 +6,13 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 // This ensures Next.js can statically analyze and embed them in the client bundle
 // IMPORTANT: These must be accessed directly, not through functions, for Next.js to embed them
 // Next.js will replace process.env.NEXT_PUBLIC_* with actual values at build time
-const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim().replace(/\/+$/, '');
-const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+// Use direct access without fallbacks to ensure Next.js can properly embed them
+const supabaseUrlRaw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKeyRaw = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Ensure we have strings and clean them
+const supabaseUrl = supabaseUrlRaw ? String(supabaseUrlRaw).trim().replace(/\/+$/, '') : '';
+const supabaseAnonKey = supabaseAnonKeyRaw ? String(supabaseAnonKeyRaw).trim() : '';
 
 // Validate that we have valid, non-empty strings
 const isValidUrl = supabaseUrl.length > 0 && supabaseUrl.startsWith('http');
@@ -73,7 +78,7 @@ const client = createClient(
   }
 );
 
-// Verify the client was created correctly
+// Verify the client was created correctly and test it
 if (typeof window !== 'undefined') {
   // Try to access the internal URL property (different versions use different property names)
   // @ts-ignore - accessing internal property for debugging
@@ -82,11 +87,25 @@ if (typeof window !== 'undefined') {
     hasClientUrl: !!clientUrl,
     clientUrlPreview: clientUrl ? `${String(clientUrl).substring(0, 40)}...` : 'MISSING',
     originalUrl: supabaseUrl ? `${supabaseUrl.substring(0, 40)}...` : 'MISSING',
+    urlType: typeof supabaseUrl,
+    urlIsString: typeof supabaseUrl === 'string',
   });
   
   if (!clientUrl || String(clientUrl).trim() === '') {
     console.error('❌ Supabase client has empty URL! This will cause fetch errors.');
     console.error('Original URL passed to createClient:', supabaseUrl);
+    console.error('URL type:', typeof supabaseUrl);
+    console.error('URL length:', supabaseUrl?.length);
+  }
+  
+  // Test if we can construct a valid fetch URL
+  try {
+    const testUrl = `${supabaseUrl}/auth/v1/signup`;
+    new URL(testUrl);
+    console.log('✅ Test URL construction successful:', testUrl.substring(0, 50) + '...');
+  } catch (e) {
+    console.error('❌ Cannot construct valid URL from supabaseUrl:', e);
+    console.error('supabaseUrl value:', supabaseUrl);
   }
 }
 
