@@ -24,8 +24,22 @@ export default function AuthPage() {
       }
 
       // Try to access supabase.auth to trigger initialization and catch any errors
-      // This will throw if env vars are missing
-      await supabase.auth.getSession();
+      // This will throw if env vars are missing - catch it early
+      try {
+        await supabase.auth.getSession();
+      } catch (initError: any) {
+        // If initialization fails, it's likely missing env vars
+        if (initError.message?.includes('Missing required') || 
+            initError.message?.includes('not set') ||
+            initError.message?.includes('Invalid value')) {
+          throw new Error(
+            'Supabase configuration error: Environment variables are not available in the client bundle. ' +
+            'Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in Vercel ' +
+            'and trigger a fresh deployment (the build cache may need to be cleared).'
+          );
+        }
+        throw initError;
+      }
 
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({

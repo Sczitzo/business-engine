@@ -48,6 +48,23 @@ function getSupabaseClient(): SupabaseClient {
     );
   }
 
+  // Double-check URL is valid before creating client
+  if (!supabaseUrl || supabaseUrl.trim() === '') {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_URL is not set. ' +
+      'This variable must be available at build time. ' +
+      'Please check your Vercel environment variables and redeploy.'
+    );
+  }
+
+  if (!supabaseAnonKey || supabaseAnonKey.trim() === '') {
+    throw new Error(
+      'NEXT_PUBLIC_SUPABASE_ANON_KEY is not set. ' +
+      'This variable must be available at build time. ' +
+      'Please check your Vercel environment variables and redeploy.'
+    );
+  }
+
   supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: true,
