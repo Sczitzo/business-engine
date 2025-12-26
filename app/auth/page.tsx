@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +11,18 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSignUp, setIsSignUp] = useState(false);
   const router = useRouter();
+
+  // Debug: Log environment variables on mount
+  useEffect(() => {
+    console.log('🔍 Environment Variables Debug:', {
+      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      urlValue: process.env.NEXT_PUBLIC_SUPABASE_URL ? 
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL.substring(0, 30)}...` : 'MISSING',
+      keyValue: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 
+        `${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 20)}...` : 'MISSING',
+    });
+  }, []);
 
   async function handleAuth(e: React.FormEvent) {
     e.preventDefault();

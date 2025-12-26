@@ -2,16 +2,17 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
+// Access environment variables at module level (top-level)
+// This ensures Next.js can statically analyze and embed them in the client bundle
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 let supabaseInstance: SupabaseClient | null = null;
 
 function getSupabaseClient(): SupabaseClient {
   if (supabaseInstance) {
     return supabaseInstance;
   }
-
-  // Access environment variables at runtime (Next.js embeds NEXT_PUBLIC_ vars at build time)
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     const missing = [];
