@@ -21,6 +21,9 @@ export default function Dashboard() {
 
   const handleContentPackSelect = (contentPack: ContentPack) => {
     setSelectedContentPack(contentPack);
+    setShowGenerator(false);
+    setShowBudget(false);
+    setShowAnalytics(false);
   };
 
   const handleRefresh = () => {
@@ -29,30 +32,63 @@ export default function Dashboard() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100vh',
+      backgroundColor: '#f5f5f7',
+    }}>
+      {/* Apple-style Header */}
       <header
         style={{
-          backgroundColor: '#fff',
-          borderBottom: '1px solid #e0e0e0',
+          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
           padding: '1rem 2rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
         }}
       >
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600 }}>Business Engine</h1>
+        <h1 style={{ 
+          fontSize: '1.25rem', 
+          fontWeight: 600,
+          letterSpacing: '-0.01em',
+          color: '#1d1d1f',
+        }}>Business Engine</h1>
         {selectedBusinessProfile && (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
               onClick={() => {
                 setShowAnalytics(!showAnalytics);
                 setShowBudget(false);
                 setShowGenerator(false);
+                setSelectedContentPack(null);
               }}
               style={{
-                backgroundColor: showAnalytics ? '#1976d2' : '#f5f5f5',
-                color: showAnalytics ? '#fff' : '#333',
-                padding: '0.5rem 1rem',
+                backgroundColor: showAnalytics ? '#007aff' : 'rgba(142, 142, 147, 0.12)',
+                color: showAnalytics ? '#ffffff' : '#1d1d1f',
+                padding: '0.625rem 1.25rem',
+                borderRadius: '12px',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              onMouseEnter={(e) => {
+                if (!showAnalytics) {
+                  e.currentTarget.style.backgroundColor = 'rgba(142, 142, 147, 0.16)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!showAnalytics) {
+                  e.currentTarget.style.backgroundColor = 'rgba(142, 142, 147, 0.12)';
+                }
               }}
             >
               Analytics
@@ -62,11 +98,28 @@ export default function Dashboard() {
                 setShowBudget(!showBudget);
                 setShowGenerator(false);
                 setShowAnalytics(false);
+                setSelectedContentPack(null);
               }}
               style={{
-                backgroundColor: showBudget ? '#1976d2' : '#f5f5f5',
-                color: showBudget ? '#fff' : '#333',
-                padding: '0.5rem 1rem',
+                backgroundColor: showBudget ? '#007aff' : 'rgba(142, 142, 147, 0.12)',
+                color: showBudget ? '#ffffff' : '#1d1d1f',
+                padding: '0.625rem 1.25rem',
+                borderRadius: '12px',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              }}
+              onMouseEnter={(e) => {
+                if (!showBudget) {
+                  e.currentTarget.style.backgroundColor = 'rgba(142, 142, 147, 0.16)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!showBudget) {
+                  e.currentTarget.style.backgroundColor = 'rgba(142, 142, 147, 0.12)';
+                }
               }}
             >
               Budget
@@ -76,11 +129,29 @@ export default function Dashboard() {
                 setShowGenerator(!showGenerator);
                 setShowBudget(false);
                 setShowAnalytics(false);
+                setSelectedContentPack(null);
               }}
               style={{
-                backgroundColor: showGenerator ? '#1976d2' : '#4caf50',
-                color: '#fff',
-                padding: '0.5rem 1rem',
+                backgroundColor: showGenerator ? '#007aff' : '#007aff',
+                color: '#ffffff',
+                padding: '0.625rem 1.25rem',
+                borderRadius: '12px',
+                fontSize: '0.9375rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 2px 8px rgba(0, 122, 255, 0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#0051d5';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 122, 255, 0.4)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#007aff';
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 122, 255, 0.3)';
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               + Generate
@@ -90,11 +161,14 @@ export default function Dashboard() {
       </header>
 
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        {/* Left Sidebar - Business Profiles */}
         <aside
           style={{
-            width: '300px',
-            backgroundColor: '#fff',
-            borderRight: '1px solid #e0e0e0',
+            width: '280px',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            borderRight: '1px solid rgba(0, 0, 0, 0.05)',
             padding: '1.5rem',
             overflowY: 'auto',
           }}
@@ -105,12 +179,15 @@ export default function Dashboard() {
           />
         </aside>
 
-        <main style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <main style={{ flex: 1, display: 'flex', overflow: 'hidden', gap: '1px' }}>
+          {/* Middle Panel - Content Packs List */}
           <div
             style={{
-              width: '400px',
-              borderRight: '1px solid #e0e0e0',
-              backgroundColor: '#fafafa',
+              width: '380px',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              borderRight: '1px solid rgba(0, 0, 0, 0.05)',
               overflowY: 'auto',
             }}
           >
@@ -124,9 +201,10 @@ export default function Dashboard() {
             ) : (
               <div
                 style={{
-                  padding: '2rem',
+                  padding: '3rem 2rem',
                   textAlign: 'center',
-                  color: '#666',
+                  color: '#86868b',
+                  fontSize: '0.9375rem',
                 }}
               >
                 Select a business profile to view content packs
@@ -134,7 +212,12 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', backgroundColor: '#fff' }}>
+          {/* Right Panel - Content View */}
+          <div style={{ 
+            flex: 1, 
+            overflowY: 'auto', 
+            backgroundColor: '#f5f5f7',
+          }}>
             {showAnalytics && selectedBusinessProfile ? (
               <AnalyticsDashboard businessProfileId={selectedBusinessProfile.id} />
             ) : showGenerator && selectedBusinessProfile ? (
@@ -156,12 +239,57 @@ export default function Dashboard() {
             ) : (
               <div
                 style={{
-                  padding: '2rem',
+                  padding: '4rem 2rem',
                   textAlign: 'center',
-                  color: '#666',
+                  color: '#86868b',
+                  fontSize: '0.9375rem',
+                  maxWidth: '600px',
+                  margin: '0 auto',
                 }}
               >
-                Select a content pack to review, or generate a new one
+                {selectedBusinessProfile ? (
+                  <>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1d1d1f', marginBottom: '0.5rem' }}>
+                      Welcome to {selectedBusinessProfile.name}
+                    </div>
+                    <div style={{ marginBottom: '2rem' }}>
+                      Select a content pack to review, or generate a new one
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowGenerator(true);
+                        setShowBudget(false);
+                        setShowAnalytics(false);
+                      }}
+                      style={{
+                        backgroundColor: '#007aff',
+                        color: '#ffffff',
+                        padding: '0.875rem 2rem',
+                        borderRadius: '12px',
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
+                        border: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(0, 122, 255, 0.3)',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#0051d5';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 122, 255, 0.4)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#007aff';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 122, 255, 0.3)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      Generate New Content
+                    </button>
+                  </>
+                ) : (
+                  'Select a business profile to get started'
+                )}
               </div>
             )}
           </div>

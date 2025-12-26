@@ -78,13 +78,15 @@ export default function BusinessContextSwitcher({
     <div>
       <h2
         style={{
-          fontSize: '1rem',
+          fontSize: '0.8125rem',
           fontWeight: 600,
           marginBottom: '1rem',
-          color: '#333',
+          color: '#86868b',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
         }}
       >
-        Business Context
+        Business Profiles
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
         {businessProfiles.map((profile) => (
@@ -92,20 +94,43 @@ export default function BusinessContextSwitcher({
             key={profile.id}
             onClick={() => onProfileChange(profile)}
             style={{
-              padding: '0.75rem',
+              padding: '1rem',
               textAlign: 'left',
-              backgroundColor:
-                selectedProfile?.id === profile.id ? '#e3f2fd' : 'transparent',
-              border: '1px solid #e0e0e0',
-              borderRadius: '4px',
+              backgroundColor: selectedProfile?.id === profile.id 
+                ? 'rgba(0, 122, 255, 0.1)' 
+                : 'transparent',
+              border: selectedProfile?.id === profile.id
+                ? '1px solid rgba(0, 122, 255, 0.3)'
+                : '1px solid transparent',
+              borderRadius: '12px',
               cursor: 'pointer',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            onMouseEnter={(e) => {
+              if (selectedProfile?.id !== profile.id) {
+                e.currentTarget.style.backgroundColor = 'rgba(142, 142, 147, 0.08)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (selectedProfile?.id !== profile.id) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }
             }}
           >
-            <div style={{ fontWeight: 500, marginBottom: '0.25rem' }}>
+            <div style={{ 
+              fontWeight: 600, 
+              marginBottom: '0.25rem',
+              color: '#1d1d1f',
+              fontSize: '0.9375rem',
+            }}>
               {profile.name}
             </div>
             {profile.market && (
-              <div style={{ fontSize: '0.75rem', color: '#666' }}>
+              <div style={{ 
+                fontSize: '0.8125rem', 
+                color: '#86868b',
+                fontWeight: 400,
+              }}>
                 {profile.market}
               </div>
             )}
