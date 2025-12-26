@@ -30,6 +30,7 @@ export interface AIGenerationResponse {
 
 export interface AIProviderAdapter {
   generate(request: AIGenerationRequest): Promise<AIGenerationResponse>;
+  generateWithBudget(request: AIGenerationRequest): Promise<AIGenerationResponse>;
   estimateCost(request: AIGenerationRequest): Promise<number>;
   getProviderName(): string;
 }
