@@ -42,97 +42,89 @@ export default function AuthPage() {
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: '#fff',
-          padding: '2rem',
-          borderRadius: '8px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          width: '100%',
-          maxWidth: '400px',
-        }}
-      >
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>
-          {isSignUp ? 'Sign Up' : 'Sign In'}
-        </h1>
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1 className="auth-title">{isSignUp ? 'Create Account' : 'Welcome Back'}</h1>
+          <p className="auth-subtitle">
+            {isSignUp
+              ? 'Sign up to get started with Business Engine'
+              : 'Sign in to continue to your workspace'}
+          </p>
+        </div>
 
         {error && (
-          <div
-            style={{
-              padding: '0.75rem',
-              backgroundColor: '#ffebee',
-              color: '#d32f2f',
-              borderRadius: '4px',
-              marginBottom: '1rem',
-            }}
-          >
-            {error}
+          <div className="auth-error">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
+              <path
+                d="M10 6v4M10 14h.01"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleAuth}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-              }}
-            >
-              Email
-            </label>
+        <form onSubmit={handleAuth} className="auth-form">
+          <div className="input-group">
             <input
               type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder=" "
               required
-              style={{ width: '100%' }}
+              className="auth-input"
+              disabled={loading}
             />
+            <label htmlFor="email" className="auth-label">
+              Email
+            </label>
           </div>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '0.5rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-              }}
-            >
-              Password
-            </label>
+          <div className="input-group">
             <input
               type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder=" "
               required
-              style={{ width: '100%' }}
+              className="auth-input"
+              disabled={loading}
             />
+            <label htmlFor="password" className="auth-label">
+              Password
+            </label>
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            style={{
-              width: '100%',
-              backgroundColor: '#1976d2',
-              color: '#fff',
-              padding: '0.75rem',
-              marginBottom: '1rem',
-            }}
+            disabled={loading || !email || !password}
+            className="auth-button-primary"
           >
-            {loading ? 'Processing...' : isSignUp ? 'Sign Up' : 'Sign In'}
+            {loading ? (
+              <span className="auth-loading">
+                <span className="auth-spinner"></span>
+                {isSignUp ? 'Creating account...' : 'Signing in...'}
+              </span>
+            ) : (
+              isSignUp ? 'Create Account' : 'Sign In'
+            )}
           </button>
+
+          <div className="auth-divider">
+            <span>or</span>
+          </div>
 
           <button
             type="button"
@@ -140,12 +132,8 @@ export default function AuthPage() {
               setIsSignUp(!isSignUp);
               setError(null);
             }}
-            style={{
-              width: '100%',
-              backgroundColor: 'transparent',
-              color: '#1976d2',
-              textDecoration: 'underline',
-            }}
+            className="auth-button-secondary"
+            disabled={loading}
           >
             {isSignUp
               ? 'Already have an account? Sign in'
@@ -156,4 +144,3 @@ export default function AuthPage() {
     </div>
   );
 }
-
