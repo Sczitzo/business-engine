@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseUserClient } from '@/lib/supabase/server';
-import { exportToGoogleDocs } from './google-docs';
+import { exportToGoogleDocs } from '@/lib/exporters/google-docs';
 import { exportToPDF } from '@/lib/exporters/pdf';
 import { exportToMarkdown } from '@/lib/exporters/markdown';
 import { exportToJSON } from '@/lib/exporters/json';
