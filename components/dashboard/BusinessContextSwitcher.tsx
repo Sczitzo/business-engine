@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import type { BusinessProfile } from '@/lib/core/types';
 
 interface BusinessContextSwitcherProps {
@@ -22,62 +21,11 @@ export default function BusinessContextSwitcher({
   }, []);
 
   async function loadBusinessProfiles() {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Development bypass: Skip auth check if enabled
-      const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-      
-      if (bypassAuth) {
-        // In bypass mode, just show empty state
-        setBusinessProfiles([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setError('Not authenticated');
-        return;
-      }
-
-      // Get user's organizations
-      const { data: orgMembers, error: orgError } = await supabase
-        .from('organization_members')
-        .select('organization_id')
-        .eq('user_id', user.id);
-
-      if (orgError) throw orgError;
-
-      if (!orgMembers || orgMembers.length === 0) {
-        setBusinessProfiles([]);
-        return;
-      }
-
-      const orgIds = orgMembers.map((m) => m.organization_id);
-
-      // Get business profiles for user's organizations
-      const { data: profiles, error: profilesError } = await supabase
-        .from('business_profiles')
-        .select('*')
-        .in('organization_id', orgIds)
-        .eq('is_active', true)
-        .order('name');
-
-      if (profilesError) throw profilesError;
-
-      setBusinessProfiles(profiles || []);
-
-      // Auto-select first profile if none selected
-      if (!selectedProfile && profiles && profiles.length > 0) {
-        onProfileChange(profiles[0]);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load business profiles');
-    } finally {
-      setLoading(false);
-    }
+    // Authentication temporarily disabled for testing
+    // Just show empty state
+    setLoading(true);
+    setBusinessProfiles([]);
+    setLoading(false);
   }
 
   if (loading) {
