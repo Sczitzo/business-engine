@@ -280,6 +280,10 @@ async function checkAndAdvanceWorkflow(
       })
       .eq('id', approvalWorkflowId);
 
+    if (approveError) {
+      throw new Error(`Failed to approve workflow: ${approveError.message}`);
+    }
+
     return;
   }
 
@@ -299,7 +303,13 @@ async function checkAndAdvanceWorkflow(
       status: 'pending' as const,
     }));
 
-    await supabase.from('workflow_step_approvals').insert(stepApprovalsToCreate);
+    const { error: insertError } = await supabase
+      .from('workflow_step_approvals')
+      .insert(stepApprovalsToCreate);
+
+    if (insertError) {
+      throw new Error(`Failed to create step approvals: ${insertError.message}`);
+    }
   }
 }
 
