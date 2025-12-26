@@ -65,15 +65,26 @@ export async function updateApprovalWorkflowState(
     }
 
     // Update existing workflow
+    // Only set reviewed_by when actually reviewing (approve/reject), not when submitting
+    const updateData: any = {
+      previous_state: existing.current_state,
+      current_state: newState,
+      review_notes: reviewNotes,
+    };
+    
+    // Only set reviewed_by and reviewed_at for actual review actions (approve/reject)
+    if (newState === 'approved' || newState === 'rejected') {
+      updateData.reviewed_by = userId;
+      updateData.reviewed_at = new Date().toISOString();
+    } else if (newState === 'pending_approval') {
+      // Resubmission after rejection - clear previous review data
+      updateData.reviewed_by = null;
+      updateData.reviewed_at = null;
+    }
+    
     const { data, error } = await supabase
       .from('approval_workflows')
-      .update({
-        previous_state: existing.current_state,
-        current_state: newState,
-        reviewed_by: userId,
-        review_notes: reviewNotes,
-        reviewed_at: newState !== 'pending_approval' ? new Date().toISOString() : null,
-      })
+      .update(updateData)
       .eq('id', existing.id)
       .select()
       .single();

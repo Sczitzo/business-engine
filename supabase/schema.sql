@@ -313,11 +313,13 @@ CREATE POLICY "Users can update their own content packs"
 CREATE POLICY "Admins can update any content pack in their organizations"
     ON content_packs FOR UPDATE
     USING (
-        business_profile_id IN (
-            SELECT id
+        -- Check admin status at policy level, not in subquery
+        EXISTS (
+            SELECT 1
             FROM business_profiles
-            WHERE organization_id IN (SELECT get_user_organization_ids(auth.uid()))
-            AND is_org_admin(auth.uid(), organization_id)
+            WHERE business_profiles.id = content_packs.business_profile_id
+              AND business_profiles.organization_id IN (SELECT get_user_organization_ids(auth.uid()))
+              AND is_org_admin(auth.uid(), business_profiles.organization_id)
         )
     );
 

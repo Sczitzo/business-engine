@@ -11,7 +11,8 @@ export async function getCurrentMonthBudget(
   businessProfileId: string
 ): Promise<BudgetLedger | null> {
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Use UTC to avoid timezone issues when calculating month key
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const monthKey = monthStart.toISOString().split('T')[0].substring(0, 7) + '-01';
 
   // Try to get existing ledger
@@ -53,6 +54,17 @@ export async function checkBudgetAvailability(
 
   const currentSpend = Number(ledger.actual_spend) || 0;
   const monthlyCap = Number(ledger.monthly_cap) || 0;
+  
+  // Treat monthlyCap of 0 as unconfigured (same as missing ledger)
+  if (monthlyCap === 0) {
+    return {
+      allowed: true,
+      currentSpend: 0,
+      monthlyCap: 0,
+      remaining: Infinity,
+    };
+  }
+  
   const remaining = monthlyCap - currentSpend;
   const allowed = currentSpend + operationCost <= monthlyCap;
 
@@ -136,7 +148,8 @@ export async function getBudgetLedgerForMonth(
   year: number,
   month: number // 0-indexed (0 = January)
 ): Promise<BudgetLedger | null> {
-  const monthStart = new Date(year, month, 1);
+  // Use UTC to avoid timezone issues when calculating month key
+  const monthStart = new Date(Date.UTC(year, month, 1));
   const monthKey = monthStart.toISOString().split('T')[0].substring(0, 7) + '-01';
 
   const { data, error } = await supabase
