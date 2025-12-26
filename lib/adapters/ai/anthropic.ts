@@ -79,12 +79,15 @@ export class AnthropicAdapter extends BaseAIAdapter implements AIProviderAdapter
     );
   }
 
-  protected calculateCost(usage: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  }): number {
-    const model = this.defaultModel;
+  protected calculateCost(
+    usage: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    },
+    model: string
+  ): number {
+    // Use the actual model from the response, not the default
     const pricing = ANTHROPIC_PRICING[model] || ANTHROPIC_PRICING[DEFAULT_MODEL];
 
     return usage.promptTokens * pricing.input + usage.completionTokens * pricing.output;

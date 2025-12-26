@@ -140,15 +140,22 @@ export async function getBudgetStats(
   const percentage = currentCap > 0 ? (currentSpend / currentCap) * 100 : 0;
 
   // Get budget transactions for category analysis
-  const { data: transactions, error: transError } = await supabase
-    .from('budget_transactions')
-    .select('amount, category')
-    .eq('budget_ledger_id', currentLedger?.id || '')
-    .order('created_at', { ascending: false })
-    .limit(100);
+  // Only query if ledger exists
+  let transactions: any[] | null = null;
+  if (currentLedger?.id) {
+    const { data, error: transError } = await supabase
+      .from('budget_transactions')
+      .select('amount, category')
+      .eq('budget_ledger_id', currentLedger.id)
+      .order('created_at', { ascending: false })
+      .limit(100);
 
-  if (transError && transError.code !== 'PGRST116') {
-    // Ignore if no transactions
+    if (transError && transError.code !== 'PGRST116') {
+      // Ignore if no transactions, but log other errors
+      console.warn('Failed to get budget transactions:', transError.message);
+    } else {
+      transactions = data;
+    }
   }
 
   // Calculate top categories
@@ -182,7 +189,7 @@ export async function getBudgetStats(
 
     if (!ledgersError && ledgers && ledgers.length > 0) {
       const totalSpend = ledgers.reduce(
-        (sum, ledger) => sum + (Number(ledger.actual_spend) || 0),
+        (sum: number, ledger: any) => sum + (Number(ledger.actual_spend) || 0),
         0
       );
       averageMonthlySpend = totalSpend / ledgers.length;

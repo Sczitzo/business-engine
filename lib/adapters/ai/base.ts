@@ -44,7 +44,8 @@ export abstract class BaseAIAdapter implements AIProviderAdapter {
     const response = await this.generate(request);
 
     // Record actual cost (may differ from estimate)
-    const actualCost = this.calculateCost(response.usage);
+    // Pass model from response to ensure correct pricing
+    const actualCost = this.calculateCost(response.usage, response.model);
     await this.recordAITransaction(request, response, actualCost);
 
     return response;
@@ -86,14 +87,17 @@ export abstract class BaseAIAdapter implements AIProviderAdapter {
   }
 
   /**
-   * Calculate cost based on token usage
+   * Calculate cost based on token usage and model
    * Override in subclasses for provider-specific pricing
    */
-  protected abstract calculateCost(usage: {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
-  }): number;
+  protected abstract calculateCost(
+    usage: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    },
+    model: string
+  ): number;
 
   /**
    * Generate content - must be implemented by provider
