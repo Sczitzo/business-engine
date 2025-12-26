@@ -54,27 +54,39 @@ Export Adapters (lib/exporters/)
 ### Export Adapters (`lib/exporters/`)
 
 - **Google Docs Exporter**: `lib/exporters/google-docs.ts`
+- **PDF Exporter**: `lib/exporters/pdf.ts`
+- **Markdown Exporter**: `lib/exporters/markdown.ts`
+- **JSON Exporter**: `lib/exporters/json.ts`
 - **Adapter Pattern**: All external integrations isolated behind adapters
 - **Budget Integration**: Each adapter checks budget before execution
 - **Approval Requirement**: Exports require approved content packs
 
-### AI Provider Adapters (Future)
+### AI Provider Adapters (`lib/adapters/ai/`)
 
 - **Isolation**: All AI calls go through adapters in `lib/adapters/ai/`
 - **Budget Tracking**: Each API call logged to `budget_ledger`
 - **Default Disabled**: No paid integrations enabled without approval
+- **Implemented**: OpenAI and Anthropic adapters with automatic cost calculation
+- **Base Adapter**: Common budget enforcement and transaction logging
 
 ## Approval and Budget Enforcement Model
 
 ### Approval Workflow State Machine
 
+**Simple Workflow:**
 ```
 draft → pending_approval → approved | rejected
 ```
 
+**Custom Multi-Step Workflow:**
+- Configurable approval steps with specific approvers
+- Support for "require all" vs "any one" approval modes
+- Automatic workflow advancement when steps complete
+- Step-by-step approval tracking
+
 **States:**
 - `draft`: Content pack created, not yet submitted
-- `pending_approval`: Submitted for review
+- `pending_approval`: Submitted for review (simple) or in workflow (custom)
 - `approved`: Approved for use/export
 - `rejected`: Rejected, can be revised and resubmitted
 
@@ -128,22 +140,30 @@ draft → pending_approval → approved | rejected
 - JWT tokens contain `organization_id` and `user_id`
 - API routes verify organization membership
 
-## Phase 1 Scope
+## Implementation Status
 
-### Implemented
+### Phase 1 - Completed ✅
 
 1. **Schema**: Complete PostgreSQL schema with RLS
 2. **Core Logic**: Content pack orchestration, approval gating, budget checks
 3. **Minimal UI**: Business context switching, content pack review/approval
 4. **Google Docs Export**: Basic export implementation
 
-### Not Implemented (Phase 2+)
+### Phase 2 - Completed ✅
 
-- Advanced AI integrations
-- Multiple export formats
-- Advanced analytics
-- Custom approval workflows
-- Budget forecasting
+1. **AI Integrations**: OpenAI and Anthropic adapters with budget tracking
+2. **Multiple Export Formats**: PDF, Markdown, JSON in addition to Google Docs
+3. **Advanced Analytics**: Content pack stats, approval rates, budget usage
+4. **Custom Approval Workflows**: Multi-step workflows with configurable approvers
+5. **Budget Forecasting**: End-of-month projections and spending trends
+
+### Future Enhancements
+
+- Email notifications for approvals
+- Activity/audit logs UI
+- User management UI
+- Additional AI providers (Google Gemini, etc.)
+- Advanced reporting and dashboards
 
 ## Technical Stack
 

@@ -1,7 +1,7 @@
 // API route for content pack operations
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseUserClient } from '@/lib/supabase/server';
+import { requireAuth } from '../middleware';
 import {
   createContentPack,
   getContentPack,
@@ -10,16 +10,13 @@ import {
   deleteContentPack,
 } from '@/lib/core/content-pack';
 import type { ContentType } from '@/lib/core/types';
+import { handleApiError, ValidationError, NotFoundError } from '@/lib/utils/errors';
+import { validateUUID, validateRequired, validateEnum, validateLength } from '@/lib/utils/validation';
 
 // GET /api/content-packs?businessProfileId=xxx&status=xxx
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await getSupabaseUserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase } = await requireAuth(request);
 
     const searchParams = request.nextUrl.searchParams;
     const businessProfileId = searchParams.get('businessProfileId');
@@ -27,19 +24,26 @@ export async function GET(request: NextRequest) {
     const contentPackId = searchParams.get('id');
 
     if (contentPackId) {
+      // Validate UUID
+      validateUUID(contentPackId, 'contentPackId');
+      
       // Get single content pack
       const contentPack = await getContentPack(supabase, contentPackId);
       if (!contentPack) {
-        return NextResponse.json({ error: 'Content pack not found' }, { status: 404 });
+        throw new NotFoundError('Content pack', contentPackId);
       }
       return NextResponse.json(contentPack);
     }
 
     if (!businessProfileId) {
-      return NextResponse.json(
-        { error: 'businessProfileId is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('businessProfileId is required', 'businessProfileId');
+    }
+
+    validateUUID(businessProfileId, 'businessProfileId');
+
+    // Validate status if provided
+    if (status) {
+      validateEnum(status, ['draft', 'pending_approval', 'approved', 'rejected'], 'status');
     }
 
     // Get all content packs for business profile
@@ -50,23 +54,15 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json(contentPacks);
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 
 // POST /api/content-packs
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await getSupabaseUserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = await requireAuth(request);
 
     const body = await request.json();
     const {
@@ -78,11 +74,31 @@ export async function POST(request: NextRequest) {
       metadata,
     } = body;
 
-    if (!businessProfileId || !title || !contentType || !contentData) {
-      return NextResponse.json(
-        { error: 'Missing required fields: businessProfileId, title, contentType, contentData' },
-        { status: 400 }
-      );
+    // Validate required fields
+    validateRequired(businessProfileId, 'businessProfileId');
+    validateRequired(title, 'title');
+    validateRequired(contentType, 'contentType');
+    
+    if (!contentData || typeof contentData !== 'object') {
+      throw new ValidationError('contentData is required and must be an object', 'contentData');
+    }
+
+    // Validate UUID
+    validateUUID(businessProfileId, 'businessProfileId');
+
+    // Validate content type
+    const validContentType = validateEnum(
+      contentType,
+      ['script', 'hook', 'post', 'video', 'other'],
+      'contentType'
+    );
+
+    // Validate title length
+    validateLength(title, 1, 200, 'title');
+
+    // Validate description length if provided
+    if (description) {
+      validateLength(description, 0, 1000, 'description');
     }
 
     const contentPack = await createContentPack(
@@ -90,96 +106,88 @@ export async function POST(request: NextRequest) {
       businessProfileId,
       user.id,
       title,
-      contentType as ContentType,
+      validContentType,
       contentData,
       description,
       metadata
     );
 
     return NextResponse.json(contentPack, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 
 // PATCH /api/content-packs?id=xxx
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await getSupabaseUserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase } = await requireAuth(request);
 
     const searchParams = request.nextUrl.searchParams;
     const contentPackId = searchParams.get('id');
 
     if (!contentPackId) {
-      return NextResponse.json(
-        { error: 'Content pack id is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Content pack id is required', 'id');
     }
+
+    validateUUID(contentPackId, 'contentPackId');
 
     const body = await request.json();
     const { title, description, content_data, metadata } = body;
 
     const updates: any = {};
-    if (title !== undefined) updates.title = title;
-    if (description !== undefined) updates.description = description;
-    if (content_data !== undefined) updates.content_data = content_data;
-    if (metadata !== undefined) updates.metadata = metadata;
+    if (title !== undefined) {
+      validateLength(title, 1, 200, 'title');
+      updates.title = title;
+    }
+    if (description !== undefined) {
+      validateLength(description, 0, 1000, 'description');
+      updates.description = description;
+    }
+    if (content_data !== undefined) {
+      if (typeof content_data !== 'object') {
+        throw new ValidationError('content_data must be an object', 'content_data');
+      }
+      updates.content_data = content_data;
+    }
+    if (metadata !== undefined) {
+      if (typeof metadata !== 'object') {
+        throw new ValidationError('metadata must be an object', 'metadata');
+      }
+      updates.metadata = metadata;
+    }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: 'No updates provided' },
-        { status: 400 }
-      );
+      throw new ValidationError('No updates provided');
     }
 
     const contentPack = await updateContentPack(supabase, contentPackId, updates);
 
     return NextResponse.json(contentPack);
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 
 // DELETE /api/content-packs?id=xxx
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await getSupabaseUserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase } = await requireAuth(request);
 
     const searchParams = request.nextUrl.searchParams;
     const contentPackId = searchParams.get('id');
 
     if (!contentPackId) {
-      return NextResponse.json(
-        { error: 'Content pack id is required' },
-        { status: 400 }
-      );
+      throw new ValidationError('Content pack id is required', 'id');
     }
+
+    validateUUID(contentPackId, 'contentPackId');
 
     await deleteContentPack(supabase, contentPackId);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error);
   }
 }
 
