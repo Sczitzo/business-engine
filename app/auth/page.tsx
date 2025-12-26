@@ -54,11 +54,18 @@ export default function AuthPage() {
       }
 
       if (isSignUp) {
+        // Log before attempting signup to debug
+        console.log('🔐 Attempting signup with email:', email);
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
         });
-        if (error) throw error;
+        
+        if (error) {
+          console.error('❌ Supabase signup error:', error);
+          throw error;
+        }
         
         // Check if email confirmation is required
         if (data.user && !data.session) {

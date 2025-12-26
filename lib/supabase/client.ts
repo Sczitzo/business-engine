@@ -73,14 +73,20 @@ const client = createClient(
   }
 );
 
-// Verify the client was created correctly by checking its internal URL
+// Verify the client was created correctly
 if (typeof window !== 'undefined') {
+  // Try to access the internal URL property (different versions use different property names)
   // @ts-ignore - accessing internal property for debugging
-  const clientUrl = client.supabaseUrl;
-  console.log('✅ Supabase client created. Internal URL:', clientUrl ? `${clientUrl.substring(0, 40)}...` : 'MISSING');
+  const clientUrl = (client as any).supabaseUrl || (client as any).rest?.url || (client as any).url;
+  console.log('✅ Supabase client created. Internal URL check:', {
+    hasClientUrl: !!clientUrl,
+    clientUrlPreview: clientUrl ? `${String(clientUrl).substring(0, 40)}...` : 'MISSING',
+    originalUrl: supabaseUrl ? `${supabaseUrl.substring(0, 40)}...` : 'MISSING',
+  });
   
-  if (!clientUrl || clientUrl.trim() === '') {
+  if (!clientUrl || String(clientUrl).trim() === '') {
     console.error('❌ Supabase client has empty URL! This will cause fetch errors.');
+    console.error('Original URL passed to createClient:', supabaseUrl);
   }
 }
 
