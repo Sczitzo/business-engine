@@ -2,26 +2,34 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Client-side: use environment variables directly (Next.js handles this)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
 let supabaseInstance: SupabaseClient | null = null;
 
-function initializeSupabaseClient(): SupabaseClient {
+function getSupabaseClient(): SupabaseClient {
   if (supabaseInstance) {
     return supabaseInstance;
   }
+
+  // Access environment variables at runtime (Next.js embeds NEXT_PUBLIC_ vars at build time)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     const missing = [];
     if (!supabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
     if (!supabaseAnonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
     
-    throw new Error(
-      `Missing required Supabase environment variables: ${missing.join(', ')}\n` +
-      'Please ensure these are set in your Vercel project settings or .env file.'
-    );
+    const errorMessage = `Missing required Supabase environment variables: ${missing.join(', ')}. ` +
+      'Please ensure these are set in your Vercel project settings and redeploy.';
+    
+    console.error(errorMessage);
+    console.error('Debug info:', {
+      hasUrl: !!supabaseUrl,
+      hasKey: !!supabaseAnonKey,
+      urlLength: supabaseUrl?.length || 0,
+      keyLength: supabaseAnonKey?.length || 0,
+    });
+    
+    throw new Error(errorMessage);
   }
 
   // Validate URL format
@@ -50,6 +58,21 @@ function initializeSupabaseClient(): SupabaseClient {
   return supabaseInstance;
 }
 
-// Initialize and export the client
-export const supabase = initializeSupabaseClient();
+// Export getter function that initializes on first access
+// This ensures env vars are checked when actually used, not at module load
+function createSupabaseProxy(): SupabaseClient {
+  return getSupabaseClient();
+}
+
+// Create a proxy that lazily initializes the client
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const client = getSupabaseClient();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+}) as SupabaseClient;
 
