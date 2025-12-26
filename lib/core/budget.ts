@@ -97,7 +97,9 @@ export async function recordBudgetTransaction(
     .single();
 
   if (error) {
-    throw new Error(`Failed to record budget transaction: ${error.message}`);
+    throw new Error(
+      `Failed to record budget transaction: ${error.message}`
+    );
   }
 
   return data;

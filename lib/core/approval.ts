@@ -176,7 +176,7 @@ export async function isContentPackApproved(
   contentPackId: string
 ): Promise<boolean> {
   const workflow = await getApprovalWorkflow(supabase, contentPackId);
-  return workflow?.current_state === 'approved' ?? false;
+  return workflow?.current_state === 'approved' || false;
 }
 
 /**
