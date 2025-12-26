@@ -23,6 +23,10 @@ export default function AuthPage() {
         throw new Error('Supabase client is not initialized. Please check your environment variables.');
       }
 
+      // Try to access supabase.auth to trigger initialization and catch any errors
+      // This will throw if env vars are missing
+      await supabase.auth.getSession();
+
       if (isSignUp) {
         const { data, error } = await supabase.auth.signUp({
           email,
