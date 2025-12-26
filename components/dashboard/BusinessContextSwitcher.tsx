@@ -26,6 +26,16 @@ export default function BusinessContextSwitcher({
       setLoading(true);
       setError(null);
 
+      // Development bypass: Skip auth check if enabled
+      const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+      
+      if (bypassAuth) {
+        // In bypass mode, just show empty state
+        setBusinessProfiles([]);
+        setLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setError('Not authenticated');
